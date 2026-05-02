@@ -606,14 +606,6 @@
 
     </section>
 
-    <!-- TV KNOBS -->
-    <div class="tv-knobs" aria-hidden="true">
-      <div class="knob red"></div>
-      <div class="knob"></div>
-      <div class="knob purple"></div>
-      <div class="knob"></div>
-      <div class="knob red"></div>
-    </div>
 
     <!-- FOOTER -->
     <footer class="footer">
@@ -756,23 +748,32 @@
 
         if (dodges >= MAX_DODGES) {
           trollBtn.removeEventListener('mouseenter', moveBtn);
+          trollBtn.removeEventListener('touchstart', onTouch);
           trollBtn.classList.add('catchable');
         }
       }
 
-      centerBtn();
-      window.addEventListener('resize', centerBtn);
-      trollBtn.addEventListener('mouseenter', moveBtn);
+      function onTouch(e) {
+        e.preventDefault();
+        moveBtn();
+      }
 
-      trollBtn.addEventListener('click', () => {
-        if (dodges < MAX_DODGES) return;
+      function enter() {
         introScreen.style.transition = 'opacity 0.5s';
         introScreen.style.opacity = '0';
         setTimeout(() => {
           introScreen.style.display = 'none';
           gallerySection.style.display = '';
         }, 500);
-      });
+      }
+
+      centerBtn();
+      window.addEventListener('resize', centerBtn);
+      trollBtn.addEventListener('mouseenter', moveBtn);
+      trollBtn.addEventListener('touchstart', onTouch, { passive: false });
+
+      trollBtn.addEventListener('click', () => { if (dodges >= MAX_DODGES) enter(); });
+      trollBtn.addEventListener('touchend', (e) => { if (dodges >= MAX_DODGES) { e.preventDefault(); enter(); } });
     })();
   </script>
 
