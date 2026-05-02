@@ -433,6 +433,84 @@
         background: repeating-linear-gradient(0deg, transparent, transparent 5px, rgba(0,0,0,0.05) 5px, rgba(0,0,0,0.05) 7px);
       }
     }
+
+    /* ── INTRO SCREEN ── */
+    .intro-screen {
+      position: relative;
+      overflow: hidden;
+      min-height: clamp(280px, 40vw, 580px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: clamp(10px,1.2vw,24px);
+      background: radial-gradient(ellipse at center, #2a1050 0%, #0e0620 70%);
+      border-radius: var(--sz-radius-card);
+      border: clamp(3px,0.3vw,7px) solid var(--jack-yellow);
+      box-shadow: 0 0 clamp(20px,2vw,60px) rgba(123,45,139,0.6);
+      margin: clamp(18px,2.5vw,56px) clamp(18px,2.5vw,56px) clamp(10px,1.2vw,28px);
+      user-select: none;
+    }
+
+    .intro-title {
+      font-size: clamp(1.4rem, 3vw, 4rem);
+      color: var(--jack-yellow);
+      text-shadow: 3px 3px 0 var(--jack-red);
+      text-align: center;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .intro-sub {
+      font-size: clamp(0.85rem, 1.2vw, 1.8rem);
+      color: var(--chowder-pink);
+      letter-spacing: 0.08em;
+      text-align: center;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .dodge-msg {
+      font-size: clamp(0.8rem, 1vw, 1.6rem);
+      color: var(--chowder-teal);
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      min-height: clamp(1.2rem, 1.5vw, 2.4rem);
+      text-align: center;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .troll-btn {
+      position: absolute;
+      background: var(--jack-red);
+      color: var(--jack-yellow);
+      border: clamp(3px,0.3vw,7px) solid var(--jack-yellow);
+      border-radius: 99px;
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(1rem, 1.5vw, 2.2rem);
+      padding: clamp(10px,1vw,22px) clamp(24px,2.5vw,52px);
+      cursor: pointer;
+      box-shadow:
+        3px 3px 0 rgba(0,0,0,0.4),
+        0 0 clamp(10px,1vw,28px) rgba(231,0,29,0.5);
+      white-space: nowrap;
+      z-index: 10;
+      transform: translate(-50%, -50%);
+      transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .troll-btn.catchable {
+      background: #0a8a40;
+      border-color: #00ff88;
+      box-shadow: 3px 3px 0 rgba(0,0,0,0.4), 0 0 20px rgba(0,255,136,0.7);
+      animation: pulse-green 0.9s ease-in-out infinite;
+    }
+
+    @keyframes pulse-green {
+      0%,100% { transform: translate(-50%,-50%) scale(1); }
+      50%      { transform: translate(-50%,-50%) scale(1.08); }
+    }
   </style>
 </head>
 <body>
@@ -460,8 +538,15 @@
       </span>
     </div>
 
+    <!-- INTRO TROLL SCREEN -->
+    <div class="intro-screen" id="introScreen">
+      <div class="intro-title">&#x1F4FA; TUNE IN TO START &#x1F4FA;</div>
+      <div class="intro-sub">Click the button to enter the broadcast...</div>
+      <button class="troll-btn" id="trollBtn">CLICK ME!</button>
+    </div>
+
     <!-- GALLERY -->
-    <section class="gallery-section">
+    <section class="gallery-section" id="gallerySection" style="display:none">
       <div class="section-label" role="heading" aria-level="2">Featured Broadcast</div>
 
       <!-- SLIDESHOW -->
@@ -635,6 +720,63 @@
     });
 
     updateUI();
+
+    /* ── TROLL BUTTON ── */
+    (function () {
+      const introScreen = document.getElementById('introScreen');
+      const gallerySection = document.getElementById('gallerySection');
+      const trollBtn = document.getElementById('trollBtn');
+      const MAX_DODGES = 10;
+      let dodges = 0;
+
+      function placeBtn(x, y) {
+        trollBtn.style.left = x + 'px';
+        trollBtn.style.top  = y + 'px';
+      }
+
+      function centerBtn() {
+        placeBtn(introScreen.clientWidth / 2, introScreen.clientHeight / 2);
+      }
+
+      function moveBtn() {
+        const pad = 24;
+        const w   = introScreen.clientWidth;
+        const h   = introScreen.clientHeight;
+        const bw  = trollBtn.offsetWidth;
+        const bh  = trollBtn.offsetHeight;
+
+        let newX, newY;
+        do {
+          newX = pad + bw / 2 + Math.random() * (w - bw - pad * 2);
+          newY = pad + bh / 2 + Math.random() * (h - bh - pad * 2);
+        } while (
+          Math.abs(newX - parseFloat(trollBtn.style.left)) < 80 &&
+          Math.abs(newY - parseFloat(trollBtn.style.top))  < 80
+        );
+
+        placeBtn(newX, newY);
+        dodges++;
+
+        if (dodges >= MAX_DODGES) {
+          trollBtn.removeEventListener('mouseenter', moveBtn);
+          trollBtn.classList.add('catchable');
+        }
+      }
+
+      centerBtn();
+      window.addEventListener('resize', centerBtn);
+      trollBtn.addEventListener('mouseenter', moveBtn);
+
+      trollBtn.addEventListener('click', () => {
+        if (dodges < MAX_DODGES) return;
+        introScreen.style.transition = 'opacity 0.5s';
+        introScreen.style.opacity = '0';
+        setTimeout(() => {
+          introScreen.style.display = 'none';
+          gallerySection.style.display = '';
+        }, 500);
+      });
+    })();
   </script>
 
 </body>
